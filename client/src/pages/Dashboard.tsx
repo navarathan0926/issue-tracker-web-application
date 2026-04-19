@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
 
   const showDrawer = (type: 'create' | 'edit', record?: Issue) => {
     setDrawerType(type);
-    setCurrentIssue(record);
+    setCurrentIssue(record || null);
     if (type === 'edit' && record) {
       form.setFieldsValue({
         title: record.title,
