@@ -69,10 +69,10 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.test
-.env*.local
+
+# Ignore all .env files with real secrets
+*/.env*
+
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -110,7 +110,10 @@ dist
 # Vite / React builds
 client/dist
 client/dist-ssr
+
+# TypeScript compiled output
 server/dist
+*.tsbuildinfo
 
 # IDEs
 .vscode/*
