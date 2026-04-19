@@ -3,7 +3,7 @@ services:
     name: issue-tracker-api
     runtime: node
     buildCommand: cd server && npm install && npm run build
-    startCommand: node src/server/dist/index.js
+    startCommand: node server/dist/index.js
     envVars:
       - key: NODE_ENV
         value: production
