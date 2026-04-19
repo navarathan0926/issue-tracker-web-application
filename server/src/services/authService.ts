@@ -24,7 +24,7 @@ export const register = async (userData: RegisterInput): Promise<AuthResult> => 
   const userId = await userModel.createUser(email, hashedPassword);
 
   const secret = process.env.JWT_SECRET!;
-  const token = jwt.sign({ userId }, secret, { expiresIn: JWT_EXPIRES_IN });
+  const token = jwt.sign({ userId, email }, secret, { expiresIn: JWT_EXPIRES_IN });
 
   return { token, user: { id: userId, email } };
 };
@@ -51,7 +51,7 @@ export const login = async (credentials: LoginInput): Promise<AuthResult> => {
   }
 
   const secret = process.env.JWT_SECRET!;
-  const token = jwt.sign({ userId: user.id }, secret, { expiresIn: JWT_EXPIRES_IN });
+  const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: JWT_EXPIRES_IN });
 
   return { token, user: { id: user.id, email: user.email } };
 };
