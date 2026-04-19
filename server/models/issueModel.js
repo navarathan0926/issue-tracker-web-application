@@ -1,10 +1,11 @@
 import pool from '../config/db.js';
+import { STATUS, PRIORITY } from '../utils/constants.js';
 
 export const createIssue = async (issueData) => {
   const { title, description, status, priority, user_id } = issueData;
   const [result] = await pool.query(
     'INSERT INTO Issues (title, description, status, priority, user_id) VALUES (?, ?, ?, ?, ?)',
-    [title, description, status || 'OPEN', priority || 'MEDIUM', user_id]
+    [title, description, status, priority, user_id]
   );
   return result.insertId;
 };

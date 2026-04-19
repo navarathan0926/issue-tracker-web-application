@@ -4,7 +4,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../features/authSlice';
-import api from '../services/api';
+import { authService } from '../services/authService';
 
 const { Title, Text } = Typography;
 
@@ -13,15 +13,16 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: Record<string, string>) => {
     try {
       setLoading(true);
-      const res = await api.post('/auth/register', values);
-      dispatch(loginSuccess({ token: res.data.data.token, email: res.data.data.email }));
+      const res = await authService.register(values);
+      dispatch(loginSuccess({ token: res.data.token }));
       message.success('Registration successful');
       navigate('/');
-    } catch (error: any) {
-      message.error(error.response?.data?.message || 'Registration failed');
+    } catch (error: Error | unknown) {
+      const msg = (error as any)?.response?.data?.message || 'Registration failed';
+      message.error(msg);
     } finally {
       setLoading(false);
     }

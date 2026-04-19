@@ -20,14 +20,17 @@ app.use('/issues', issueRoutes);
 // Test DB Connection
 app.get('/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
+    const connection = await pool.getConnection();
+    await connection.ping();
+    connection.release();
     res.json({ success: true, message: 'Database connection successful' });
   } catch (error) {
-    console.error('Database connection failed', error);
-    res.status(500).json({ success: false, message: 'Database connection failed' });
+    console.error('Database connection failed:', error.message);
+    res.status(500).json({ success: false, message: 'Database connection failed', error: error.message });
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Connecting to database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
 });
