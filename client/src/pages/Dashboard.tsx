@@ -1,35 +1,36 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card } from 'antd';
 import { PlusOutlined, SearchOutlined, CheckCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import debounce from 'lodash/debounce'; // We need to install lodash or use simple debounce
-import api from '../services/api';
+import debounce from 'lodash/debounce';
+import { issueService } from '../services/issueService';
+import { type Issue, IssueStatus, IssuePriority, type IssueFilters } from '../types';
 import moment from 'moment';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const STATUS_COLORS: Record<string, string> = {
-  OPEN: 'blue',
-  IN_PROGRESS: 'orange',
-  RESOLVED: 'green',
+const STATUS_COLORS: Record<IssueStatus, string> = {
+  [IssueStatus.OPEN]: 'blue',
+  [IssueStatus.IN_PROGRESS]: 'orange',
+  [IssueStatus.RESOLVED]: 'green',
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  LOW: 'green',
-  MEDIUM: 'orange',
-  HIGH: 'red',
+const PRIORITY_COLORS: Record<IssuePriority, string> = {
+  [IssuePriority.LOW]: 'green',
+  [IssuePriority.MEDIUM]: 'orange',
+  [IssuePriority.HIGH]: 'red',
 };
 
 const Dashboard: React.FC = () => {
-  const [issues, setIssues] = useState([]);
+  const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0 });
   const [openDrawer, setOpenDrawer] = useState(false);
   const [drawerType, setDrawerType] = useState<'create' | 'edit'>('create');
-  const [currentIssue, setCurrentIssue] = useState<any>(null);
+  const [currentIssue, setCurrentIssue] = useState<Issue | null>(null);
   
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<IssueFilters>({
     search: '',
     status: '',
     priority: '',
@@ -39,26 +40,19 @@ const Dashboard: React.FC = () => {
 
   const [form] = Form.useForm();
 
-  const fetchIssues = async (currentFilters: any) => {
+  const fetchIssues = async (currentFilters: IssueFilters) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (currentFilters.search) params.append('search', currentFilters.search);
-      if (currentFilters.status) params.append('status', currentFilters.status);
-      if (currentFilters.priority) params.append('priority', currentFilters.priority);
-      params.append('page', currentFilters.page.toString());
-      params.append('limit', currentFilters.limit.toString());
-
-      const res = await api.get(`/issues?${params.toString()}`);
-      setIssues(res.data.data.issues);
-      setTotal(res.data.data.total);
+      const data = await issueService.getIssues(currentFilters);
+      setIssues(data.issues);
+      setTotal(data.total);
       
-      const statsData = res.data.data.stats || [];
+      const statsData = data.stats || [];
       const newStats = { open: 0, inProgress: 0, resolved: 0 };
-      statsData.forEach((s: any) => {
-        if (s.status === 'OPEN') newStats.open = s.count;
-        if (s.status === 'IN_PROGRESS') newStats.inProgress = s.count;
-        if (s.status === 'RESOLVED') newStats.resolved = s.count;
+      statsData.forEach((s) => {
+        if (s.status === IssueStatus.OPEN) newStats.open = s.count;
+        if (s.status === IssueStatus.IN_PROGRESS) newStats.inProgress = s.count;
+        if (s.status === IssueStatus.RESOLVED) newStats.resolved = s.count;
       });
       setStats(newStats);
     } catch (error) {
@@ -88,12 +82,12 @@ const Dashboard: React.FC = () => {
   const handleTableChange = (pagination: any) => {
     setFilters(prev => ({
       ...prev,
-      page: pagination.current,
-      limit: pagination.pageSize
+      page: pagination.current || 1,
+      limit: pagination.pageSize || 10
     }));
   };
 
-  const showDrawer = (type: 'create' | 'edit', record?: any) => {
+  const showDrawer = (type: 'create' | 'edit', record?: Issue) => {
     setDrawerType(type);
     setCurrentIssue(record);
     if (type === 'edit' && record) {
@@ -115,20 +109,21 @@ const Dashboard: React.FC = () => {
     form.resetFields();
   };
 
-  const onSave = async (values: any) => {
+  const onSave = async (values: Partial<Issue>) => {
     try {
       setLoading(true);
       if (drawerType === 'create') {
-        await api.post('/issues', values);
+        await issueService.createIssue(values);
         message.success('Issue created successfully');
-      } else {
-        await api.put(`/issues/${currentIssue.id}`, values);
+      } else if (currentIssue) {
+        await issueService.updateIssue(currentIssue.id, values);
         message.success('Issue updated successfully');
       }
       closeDrawer();
       fetchIssues(filters);
-    } catch (error: any) {
-      message.error(error.response?.data?.message || 'Failed to save issue');
+    } catch (error: Error | unknown) {
+      const msg = (error as any)?.response?.data?.message || 'Failed to save issue';
+      message.error(msg);
     } finally {
       setLoading(false);
     }
@@ -143,7 +138,7 @@ const Dashboard: React.FC = () => {
       cancelText: 'No',
       onOk: async () => {
         try {
-          await api.delete(`/issues/${id}`);
+          await issueService.deleteIssue(id);
           message.success('Issue deleted');
           fetchIssues(filters);
         } catch (error) {
@@ -158,7 +153,7 @@ const Dashboard: React.FC = () => {
       title: 'Title',
       dataIndex: 'title',
       key: 'title',
-      render: (text: string, record: any) => (
+      render: (text: string, record: Issue) => (
         <a onClick={() => showDrawer('edit', record)} style={{ fontWeight: 500 }}>
           {text}
         </a>
@@ -168,7 +163,7 @@ const Dashboard: React.FC = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
+      render: (status: IssueStatus) => (
         <Tag color={STATUS_COLORS[status]} style={{ borderRadius: 4 }}>
           {status.replace('_', ' ')}
         </Tag>
@@ -178,7 +173,7 @@ const Dashboard: React.FC = () => {
       title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
-      render: (priority: string) => (
+      render: (priority: IssuePriority) => (
         <Tag color={PRIORITY_COLORS[priority]} style={{ borderRadius: 4 }}>
           {priority}
         </Tag>
@@ -193,7 +188,7 @@ const Dashboard: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Issue) => (
         <Space size="middle">
           <Button type="link" onClick={() => showDrawer('edit', record)} style={{ padding: 0 }}>Edit</Button>
           <Button type="link" danger onClick={() => handleDelete(record.id)} style={{ padding: 0 }}>Delete</Button>
@@ -237,9 +232,9 @@ const Dashboard: React.FC = () => {
             allowClear
             onChange={(val) => setFilters(prev => ({ ...prev, status: val, page: 1 }))}
           >
-            <Option value="OPEN">Open</Option>
-            <Option value="IN_PROGRESS">In Progress</Option>
-            <Option value="RESOLVED">Resolved</Option>
+            <Option value={IssueStatus.OPEN}>Open</Option>
+            <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
+            <Option value={IssueStatus.RESOLVED}>Resolved</Option>
           </Select>
           <Select
             placeholder="Filter by Priority"
@@ -247,9 +242,9 @@ const Dashboard: React.FC = () => {
             allowClear
             onChange={(val) => setFilters(prev => ({ ...prev, priority: val, page: 1 }))}
           >
-            <Option value="LOW">Low</Option>
-            <Option value="MEDIUM">Medium</Option>
-            <Option value="HIGH">High</Option>
+            <Option value={IssuePriority.LOW}>Low</Option>
+            <Option value={IssuePriority.MEDIUM}>Medium</Option>
+            <Option value={IssuePriority.HIGH}>High</Option>
           </Select>
         </Space>
         
@@ -299,18 +294,18 @@ const Dashboard: React.FC = () => {
           {drawerType === 'edit' && (
             <Form.Item name="status" label="Status">
               <Select>
-                <Option value="OPEN">Open</Option>
-                <Option value="IN_PROGRESS">In Progress</Option>
-                <Option value="RESOLVED">Resolved</Option>
+                <Option value={IssueStatus.OPEN}>Open</Option>
+                <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
+                <Option value={IssueStatus.RESOLVED}>Resolved</Option>
               </Select>
             </Form.Item>
           )}
 
-          <Form.Item name="priority" label="Priority" initialValue="MEDIUM">
+          <Form.Item name="priority" label="Priority" initialValue={IssuePriority.MEDIUM}>
             <Select>
-              <Option value="LOW">Low</Option>
-              <Option value="MEDIUM">Medium</Option>
-              <Option value="HIGH">High</Option>
+              <Option value={IssuePriority.LOW}>Low</Option>
+              <Option value={IssuePriority.MEDIUM}>Medium</Option>
+              <Option value={IssuePriority.HIGH}>High</Option>
             </Select>
           </Form.Item>
         </Form>

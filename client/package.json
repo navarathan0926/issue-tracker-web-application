@@ -14,19 +14,22 @@
     "@types/lodash": "^4.17.24",
     "antd": "^6.3.6",
     "axios": "^1.15.0",
+    "jwt-decode": "^4.0.0",
     "lodash": "^4.18.1",
     "lucide-react": "^1.8.0",
     "moment": "^2.30.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.14.1"
+    "react-router-dom": "^7.14.1",
+    "styled-components": "^6.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/styled-components": "^5.1.36",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
