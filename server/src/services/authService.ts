@@ -4,10 +4,6 @@ import * as userModel from '../models/userModel.js';
 import { BCRYPT_SALT_ROUNDS, JWT_EXPIRES_IN } from '../utils/constants.js';
 import type { RegisterInput, LoginInput, AuthResult } from '../types/index.js';
 
-/**
- * Register a new user account.
- * Throws descriptive errors for validation failures.
- */
 export const register = async (userData: RegisterInput): Promise<AuthResult> => {
   const { email, password } = userData;
 
@@ -29,10 +25,6 @@ export const register = async (userData: RegisterInput): Promise<AuthResult> => 
   return { token, user: { id: userId, email } };
 };
 
-/**
- * Authenticate a user with email + password.
- * Throws for invalid credentials (intentionally vague to prevent enumeration).
- */
 export const login = async (credentials: LoginInput): Promise<AuthResult> => {
   const { email, password } = credentials;
 

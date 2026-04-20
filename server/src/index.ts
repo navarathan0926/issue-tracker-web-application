@@ -1,6 +1,7 @@
-import express, { type Application, type Request, type Response } from 'express';
+import express, { type Application, type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
 import authRoutes from './routes/authRoutes.js';
 import issueRoutes from './routes/issueRoutes.js';
 import pool from './config/db.js';
@@ -12,7 +13,7 @@ const app: Application = express();
 const PORT: number = parseInt(process.env.PORT ?? '5000', 10);
 const NODE_ENV: string = process.env.NODE_ENV ?? 'development';
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
+app.use(helmet());
 
 const allowedOrigins: string[] = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
   .split(',')
@@ -21,7 +22,6 @@ const allowedOrigins: string[] = (process.env.ALLOWED_ORIGINS ?? 'http://localho
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. Postman, curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -32,17 +32,11 @@ app.use(
   }),
 );
 
-// ─── Body parsing ─────────────────────────────────────────────────────────────
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-
 app.use('/auth', authRoutes);
 app.use('/issues', issueRoutes);
-
-// ─── Health check ─────────────────────────────────────────────────────────────
 
 app.get('/health', async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -61,27 +55,31 @@ app.get('/health', async (_req: Request, res: Response): Promise<void> => {
   }
 });
 
-// ─── 404 fallback ─────────────────────────────────────────────────────────────
-
 app.use((_req: Request, res: Response): void => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-// ─── Start server ─────────────────────────────────────────────────────────────
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: NODE_ENV === 'development' ? err.message : undefined,
+  });
+});
 
 const server = app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} [${NODE_ENV}]`);
   console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
 });
 
-// ─── Graceful shutdown ────────────────────────────────────────────────────────
-
-const shutdown = async (signal: string): Promise<void> => {
+const shutdown = (signal: string) => {
   console.log(`\n${signal} received. Closing server…`);
-  server.close(async () => {
-    await pool.end();
-    console.log('Database pool closed. Goodbye.');
-    process.exit(0);
+  server.close(() => {
+    pool.end().then(() => {
+      console.log('Database pool closed. Goodbye.');
+      process.exit(0);
+    });
   });
 };
 

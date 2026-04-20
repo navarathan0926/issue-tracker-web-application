@@ -2,10 +2,6 @@ import type { Request, Response } from 'express';
 import * as authService from '../services/authService.js';
 import type { RegisterInput, LoginInput } from '../types/index.js';
 
-/**
- * POST /auth/register
- * Registers a new user and returns a JWT + safe user object.
- */
 export const register = async (req: Request<object, object, RegisterInput>, res: Response): Promise<void> => {
   try {
     const { token, user } = await authService.register(req.body);
@@ -20,10 +16,6 @@ export const register = async (req: Request<object, object, RegisterInput>, res:
   }
 };
 
-/**
- * POST /auth/login
- * Authenticates a user and returns a JWT + safe user object.
- */
 export const login = async (req: Request<object, object, LoginInput>, res: Response): Promise<void> => {
   try {
     const { token, user } = await authService.login(req.body);

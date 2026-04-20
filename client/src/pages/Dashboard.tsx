@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card } from 'antd';
-import { PlusOutlined, SearchOutlined, CheckCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card, Grid } from 'antd';
+import { PlusOutlined, SearchOutlined, CheckCircleOutlined, SyncOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import debounce from 'lodash/debounce';
 import { issueService } from '../services/issueService';
 import { type Issue, IssueStatus, IssuePriority, type IssueFilters } from '../types';
@@ -37,6 +37,8 @@ const Dashboard: React.FC = () => {
     page: 1,
     limit: 10
   });
+
+  const screens = Grid.useBreakpoint();
 
   const [form] = Form.useForm();
 
@@ -147,6 +149,32 @@ const Dashboard: React.FC = () => {
       }
     });
   };
+  
+  const handleExport = async () => {
+    try {
+      setLoading(true);
+      const blob = await issueService.exportIssues({
+        search: filters.search,
+        status: filters.status,
+        priority: filters.priority
+      });
+
+      const url = URL.createObjectURL(new Blob([blob], { type: 'text/csv;charset=utf-8;' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `issues_export_${moment().format('YYYYMMDD_HHmmss')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      message.success('Successfully exported issues');
+    } catch (error) {
+      message.error('Failed to export issues');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     {
@@ -198,71 +226,107 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div>
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card bordered={false} style={{ background: '#f6ffed' }}>
-            <Statistic title="Open Issues" value={stats.open} valueStyle={{ color: '#52c41a' }} prefix={<ClockCircleOutlined />} />
+    <>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} hoverable style={{ background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)', borderRadius: '12px' }}>
+            <Statistic title="Open Issues" value={stats.open} valueStyle={{ color: '#389e0d', fontWeight: 'bold' }} prefix={<ClockCircleOutlined />} />
           </Card>
         </Col>
-        <Col span={8}>
-          <Card bordered={false} style={{ background: '#fff7e6' }}>
-            <Statistic title="In Progress" value={stats.inProgress} valueStyle={{ color: '#fa8c16' }} prefix={<SyncOutlined spin />} />
+        <Col xs={24} sm={8}>
+          <Card bordered={false} hoverable style={{ background: 'linear-gradient(135deg, #fff7e6 0%, #ffd591 100%)', borderRadius: '12px' }}>
+            <Statistic title="In Progress" value={stats.inProgress} valueStyle={{ color: '#d46b08', fontWeight: 'bold' }} prefix={<SyncOutlined spin />} />
           </Card>
         </Col>
-        <Col span={8}>
-          <Card bordered={false} style={{ background: '#e6f4ff' }}>
-            <Statistic title="Resolved" value={stats.resolved} valueStyle={{ color: '#1677ff' }} prefix={<CheckCircleOutlined />} />
+        <Col xs={24} sm={8}>
+          <Card bordered={false} hoverable style={{ background: 'linear-gradient(135deg, #e6f4ff 0%, #91caff 100%)', borderRadius: '12px' }}>
+            <Statistic title="Resolved" value={stats.resolved} valueStyle={{ color: '#0958d9', fontWeight: 'bold' }} prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
       </Row>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, alignItems: 'center' }}>
-        <Space size="middle">
-          <Input 
-            placeholder="Search issues..." 
-            prefix={<SearchOutlined />} 
-            onChange={handleSearchChange}
-            style={{ width: 250 }}
-            allowClear
-          />
-          <Select
-            placeholder="Filter by Status"
-            style={{ width: 150 }}
-            allowClear
-            onChange={(val) => setFilters(prev => ({ ...prev, status: val, page: 1 }))}
-          >
-            <Option value={IssueStatus.OPEN}>Open</Option>
-            <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
-            <Option value={IssueStatus.RESOLVED}>Resolved</Option>
-          </Select>
-          <Select
-            placeholder="Filter by Priority"
-            style={{ width: 150 }}
-            allowClear
-            onChange={(val) => setFilters(prev => ({ ...prev, priority: val, page: 1 }))}
-          >
-            <Option value={IssuePriority.LOW}>Low</Option>
-            <Option value={IssuePriority.MEDIUM}>Medium</Option>
-            <Option value={IssuePriority.HIGH}>High</Option>
-          </Select>
-        </Space>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={17}>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={10}>
+              <Input 
+                placeholder="Search issues..." 
+                prefix={<SearchOutlined />} 
+                onChange={handleSearchChange}
+                style={{ width: '100%', height: '40px' }}
+                allowClear
+              />
+            </Col>
+            <Col xs={12} sm={6} md={7}>
+              <Select
+                placeholder="Status"
+                style={{ width: '100%', height: '40px' }}
+                allowClear
+                onChange={(val) => setFilters(prev => ({ ...prev, status: val, page: 1 }))}
+              >
+                <Option value={IssueStatus.OPEN}>Open</Option>
+                <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
+                <Option value={IssueStatus.RESOLVED}>Resolved</Option>
+              </Select>
+            </Col>
+            <Col xs={12} sm={6} md={7}>
+              <Select
+                placeholder="Priority"
+                style={{ width: '100%', height: '40px' }}
+                allowClear
+                onChange={(val) => setFilters(prev => ({ ...prev, priority: val, page: 1 }))}
+              >
+                <Option value={IssuePriority.LOW}>Low</Option>
+                <Option value={IssuePriority.MEDIUM}>Medium</Option>
+                <Option value={IssuePriority.HIGH}>High</Option>
+              </Select>
+            </Col>
+          </Row>
+        </Col>
         
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => showDrawer('create')}>
-          New Issue
-        </Button>
-      </div>
+        <Col xs={24} lg={7} style={{ textAlign: screens.lg ? 'right' : 'left' }}>
+          <Space 
+            size="middle" 
+            style={{ width: '100%', justifyContent: screens.lg ? 'flex-end' : 'flex-start' }} 
+            direction={screens.xs ? 'vertical' : 'horizontal'}
+            wrap
+          >
+            <Button 
+              icon={<DownloadOutlined />} 
+              onClick={handleExport}
+              loading={loading}
+              size="large"
+              style={{ borderRadius: '8px' }}
+              block={screens.xs}
+            >
+              Export CSV
+            </Button>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => showDrawer('create')}
+              size="large"
+              style={{ borderRadius: '8px' }}
+              block={screens.xs}
+            >
+              New Issue
+            </Button>
+          </Space>
+        </Col>
+      </Row>
 
       <Table 
         columns={columns} 
         dataSource={issues} 
         rowKey="id" 
         loading={loading}
+        scroll={{ x: 800 }}
         pagination={{
           current: filters.page,
           pageSize: filters.limit,
           total: total,
           showSizeChanger: true,
+          position: ['bottomCenter']
         }}
         onChange={handleTableChange}
       />
@@ -270,7 +334,7 @@ const Dashboard: React.FC = () => {
       <Drawer
         title={drawerType === 'create' ? 'Create New Issue' : 'Edit Issue'}
         placement="right"
-        width={400}
+        width={screens.xs ? '100%' : 400}
         onClose={closeDrawer}
         open={openDrawer}
         extra={
@@ -284,33 +348,35 @@ const Dashboard: React.FC = () => {
       >
         <Form layout="vertical" form={form} onFinish={onSave}>
           <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please enter issue title' }]}>
-            <Input placeholder="Enter issue title" />
+            <Input placeholder="Enter issue title" size="large" />
           </Form.Item>
           
           <Form.Item name="description" label="Description">
             <TextArea rows={4} placeholder="Enter detailed description" />
           </Form.Item>
           
-          {drawerType === 'edit' && (
-            <Form.Item name="status" label="Status">
-              <Select>
-                <Option value={IssueStatus.OPEN}>Open</Option>
-                <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
-                <Option value={IssueStatus.RESOLVED}>Resolved</Option>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            {drawerType === 'edit' && (
+              <Form.Item name="status" label="Status" style={{ flex: 1 }}>
+                <Select size="large">
+                  <Option value={IssueStatus.OPEN}>Open</Option>
+                  <Option value={IssueStatus.IN_PROGRESS}>In Progress</Option>
+                  <Option value={IssueStatus.RESOLVED}>Resolved</Option>
+                </Select>
+              </Form.Item>
+            )}
+
+            <Form.Item name="priority" label="Priority" initialValue={IssuePriority.MEDIUM} style={{ flex: 1 }}>
+              <Select size="large">
+                <Option value={IssuePriority.LOW}>Low</Option>
+                <Option value={IssuePriority.MEDIUM}>Medium</Option>
+                <Option value={IssuePriority.HIGH}>High</Option>
               </Select>
             </Form.Item>
-          )}
-
-          <Form.Item name="priority" label="Priority" initialValue={IssuePriority.MEDIUM}>
-            <Select>
-              <Option value={IssuePriority.LOW}>Low</Option>
-              <Option value={IssuePriority.MEDIUM}>Medium</Option>
-              <Option value={IssuePriority.HIGH}>High</Option>
-            </Select>
-          </Form.Item>
+          </div>
         </Form>
       </Drawer>
-    </div>
+    </>
   );
 };
 

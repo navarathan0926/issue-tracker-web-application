@@ -9,10 +9,6 @@ import type {
   StatusCountRow,
 } from '../types/index.js';
 
-/**
- * Create a new issue for `userId`.
- * Applies default status (OPEN) and priority (MEDIUM) if not provided.
- */
 export const createIssue = async (
   issueData: CreateIssueInput,
   userId: number,
@@ -37,9 +33,6 @@ export const createIssue = async (
   return created;
 };
 
-/**
- * Return paginated issues for `userId`, filtered by optional criteria.
- */
 export const getIssues = async (
   userId: number,
   filters: IssueFilters,
@@ -47,6 +40,13 @@ export const getIssues = async (
   limit: number,
 ): Promise<PaginatedResult<IssueRow>> => {
   return issueModel.getIssues(userId, filters, page, limit);
+};
+
+export const getAllIssues = async (
+  userId: number,
+  filters: IssueFilters,
+): Promise<IssueRow[]> => {
+  return issueModel.getAllIssues(userId, filters);
 };
 
 /**

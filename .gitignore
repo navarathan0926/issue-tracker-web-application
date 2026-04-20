@@ -121,3 +121,5 @@ server/dist
 .idea/
 
 SKILLS_AND_TOOLS.md
+
+.copilot/*

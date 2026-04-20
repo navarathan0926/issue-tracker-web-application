@@ -10,7 +10,6 @@ import type {
 import { IssueStatus, IssuePriority } from '../types/index.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
-// ─── Internal DB row type ─────────────────────────────────────────────────────
 
 interface IssueDbRow extends RowDataPacket {
   id: number;
@@ -32,7 +31,6 @@ interface StatusCountDbRow extends RowDataPacket {
   count: number;
 }
 
-// ─── Model functions ──────────────────────────────────────────────────────────
 
 export const createIssue = async (
   issueData: CreateIssueInput & { user_id: number },
@@ -82,6 +80,32 @@ export const getIssues = async (
 
   const [rows] = await pool.query<IssueDbRow[]>(query, queryParams);
   return { data: rows as IssueRow[], total };
+};
+
+export const getAllIssues = async (
+  userId: number,
+  filters: IssueFilters,
+): Promise<IssueRow[]> => {
+  let query = 'SELECT * FROM Issues WHERE user_id = ?';
+  const queryParams: (string | number)[] = [userId];
+
+  if (filters.search) {
+    query += ' AND title LIKE ?';
+    queryParams.push(`%${filters.search}%`);
+  }
+  if (filters.status) {
+    query += ' AND status = ?';
+    queryParams.push(filters.status);
+  }
+  if (filters.priority) {
+    query += ' AND priority = ?';
+    queryParams.push(filters.priority);
+  }
+
+  query += ' ORDER BY created_at DESC';
+
+  const [rows] = await pool.query<IssueDbRow[]>(query, queryParams);
+  return rows as IssueRow[];
 };
 
 export const getIssueById = async (
