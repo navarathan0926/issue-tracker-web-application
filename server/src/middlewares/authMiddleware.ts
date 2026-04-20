@@ -2,10 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from '../types/index.js';
 
-/**
- * Middleware that validates the Bearer JWT in the Authorization header.
- * Attaches the decoded `JwtPayload` to `req.user` on success.
- */
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.header('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;

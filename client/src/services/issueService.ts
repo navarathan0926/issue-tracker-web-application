@@ -14,6 +14,18 @@ export const issueService = {
     return res.data.data;
   },
 
+  exportIssues: async (filters: Partial<IssueFilters>) => {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.priority) params.append('priority', filters.priority);
+
+    const res = await api.get(`/issues/export?${params.toString()}`, {
+      responseType: 'blob'
+    });
+    return res.data;
+  },
+
   createIssue: async (data: Partial<Issue>) => {
     const res = await api.post<{ success: boolean; data: Issue; message: string }>('/issues', data);
     return res.data.data;

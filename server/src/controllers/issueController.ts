@@ -4,7 +4,6 @@ import { IssueStatus, IssuePriority } from '../types/index.js';
 import type { CreateIssueInput, UpdateIssueInput, IssueFilters } from '../types/index.js';
 import { DEFAULT_PAGE_LIMIT } from '../utils/constants.js';
 
-// ─── Route param / query helpers ──────────────────────────────────────────────
 
 interface IssueParams {
   id: string;
@@ -18,12 +17,6 @@ interface IssueQuery {
   limit?: string;
 }
 
-// ─── Handlers ────────────────────────────────────────────────────────────────
-
-/**
- * POST /issues
- * Create a new issue for the authenticated user.
- */
 export const createIssue = async (
   req: Request<object, object, CreateIssueInput>,
   res: Response,
@@ -37,10 +30,6 @@ export const createIssue = async (
   }
 };
 
-/**
- * GET /issues
- * Return a paginated, filtered list of issues for the authenticated user.
- */
 export const getIssues = async (
   req: Request<object, object, object, IssueQuery>,
   res: Response,
@@ -76,10 +65,6 @@ export const getIssues = async (
   }
 };
 
-/**
- * GET /issues/:id
- * Fetch a single issue owned by the authenticated user.
- */
 export const getIssueById = async (
   req: Request<IssueParams>,
   res: Response,
@@ -93,10 +78,6 @@ export const getIssueById = async (
   }
 };
 
-/**
- * PUT /issues/:id
- * Apply a partial update to an issue owned by the authenticated user.
- */
 export const updateIssue = async (
   req: Request<IssueParams, object, UpdateIssueInput>,
   res: Response,
@@ -114,10 +95,6 @@ export const updateIssue = async (
   }
 };
 
-/**
- * DELETE /issues/:id
- * Delete an issue owned by the authenticated user.
- */
 export const deleteIssue = async (
   req: Request<IssueParams>,
   res: Response,
@@ -131,15 +108,48 @@ export const deleteIssue = async (
   }
 };
 
-/**
- * GET /issues/stats
- * Return per-status counts for the authenticated user (used by dashboard).
- */
 export const getIssueStatsByStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const stats = await issueService.getIssueStatsByStatus(req.user!.userId);
     res.status(200).json({ success: true, data: stats, message: 'Fetched issue stats' });
   } catch {
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const exportIssues = async (
+  req: Request<object, object, object, IssueQuery>,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { search, status, priority } = req.query;
+
+    const filters: IssueFilters = {
+      search,
+      status: status as IssueStatus | undefined,
+      priority: priority as IssuePriority | undefined,
+    };
+
+    const issues = await issueService.getAllIssues(req.user!.userId, filters);
+
+    const headers = ['ID', 'Title', 'Description', 'Status', 'Priority', 'Created At'];
+    const csvRows = issues.map(issue => [
+      issue.id,
+      `"${String(issue.title).replace(/"/g, '""')}"`,
+      `"${String(issue.description || '').replace(/"/g, '""')}"`,
+      issue.status,
+      issue.priority,
+      issue.created_at instanceof Date ? issue.created_at.toISOString() : issue.created_at
+    ].join(','));
+
+    // Add UTF-8 BOM for Excel compatibility
+    const csvContent = '\ufeff' + [headers.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=issues_export.csv');
+    res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Export Error:', error);
+    res.status(500).json({ success: false, message: 'Export failed' });
   }
 };

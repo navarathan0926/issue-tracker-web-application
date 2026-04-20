@@ -1,5 +1,3 @@
-// ─── Enums ───────────────────────────────────────────────────────────────────
-
 export enum IssueStatus {
   OPEN = 'OPEN',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -11,8 +9,6 @@ export enum IssuePriority {
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
 }
-
-// ─── Database Row Shapes ──────────────────────────────────────────────────────
 
 export interface UserRow {
   id: number;
@@ -37,8 +33,6 @@ export interface StatusCountRow {
   status: IssueStatus;
   count: number;
 }
-
-// ─── Service / DTO Shapes ─────────────────────────────────────────────────────
 
 export interface RegisterInput {
   email: string;
@@ -85,15 +79,11 @@ export interface PaginatedResult<T> {
   total: number;
 }
 
-// ─── JWT Payload ──────────────────────────────────────────────────────────────
-
 export interface JwtPayload {
   userId: number;
   iat?: number;
   exp?: number;
 }
-
-// ─── Express Augmentation ─────────────────────────────────────────────────────
 
 declare global {
   namespace Express {

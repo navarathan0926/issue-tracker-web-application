@@ -39,6 +39,10 @@ export const LogoTitle = styled.h2`
   font-size: 18px;
   font-weight: 600;
   color: #1f1f1f;
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 `;
 
 export const UserSection = styled.div`
@@ -49,11 +53,18 @@ export const UserSection = styled.div`
 
 export const UserEmail = styled.span`
   color: #595959;
+  @media (max-width: 576px) {
+    display: none;
+  }
 `;
 
 export const StyledContent = styled(Content)`
   padding: 24px 48px;
   overflow: initial;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 export const ContentWrapper = styled.div`
@@ -62,6 +73,10 @@ export const ContentWrapper = styled.div`
   border-radius: 8px;
   min-height: 80vh;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 export const StyledFooter = styled(Footer)`
