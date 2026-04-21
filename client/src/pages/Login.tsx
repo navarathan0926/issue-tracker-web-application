@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
+import { useState, type FC } from 'react';
+import { Form, Button, Card, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../features/authSlice';
 import { authService } from '../services/authService';
+import FormInput from '../components/forms/FormInput';
+import FormPassword from '../components/forms/FormPassword';
 
 const { Title, Text } = Typography;
 
-const Login: React.FC = () => {
+const Login: FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -46,22 +48,22 @@ const Login: React.FC = () => {
           layout="vertical"
           size="large"
         >
-          <Form.Item
+          <FormInput
             name="email"
+            placeholder="Email"
+            prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
             rules={[
               { required: true, message: 'Please input your Email!' },
               { type: 'email', message: 'Please enter a valid email!' }
             ]}
-          >
-            <Input prefix={<UserOutlined style={{ color: '#bfbfbf' }} />} placeholder="Email" />
-          </Form.Item>
+          />
 
-          <Form.Item
+          <FormPassword
             name="password"
+            placeholder="Password"
+            prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
             rules={[{ required: true, message: 'Please input your Password!' }]}
-          >
-            <Input.Password prefix={<LockOutlined style={{ color: '#bfbfbf' }} />} placeholder="Password" />
-          </Form.Item>
+          />
 
           <Form.Item>
             <Button type="primary" htmlType="submit" style={{ width: '100%', marginTop: 8 }} loading={loading}>

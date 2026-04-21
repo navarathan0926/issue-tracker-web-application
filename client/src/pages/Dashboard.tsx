@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, type FC } from 'react';
 import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card, Grid } from 'antd';
 import { PlusOutlined, SearchOutlined, CheckCircleOutlined, SyncOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import debounce from 'lodash/debounce';
@@ -21,7 +21,7 @@ const PRIORITY_COLORS: Record<IssuePriority, string> = {
   [IssuePriority.HIGH]: 'red',
 };
 
-const Dashboard: React.FC = () => {
+const Dashboard: FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [drawerType, setDrawerType] = useState<'create' | 'edit'>('create');
   const [currentIssue, setCurrentIssue] = useState<Issue | null>(null);
-  
+
   const [filters, setFilters] = useState<IssueFilters>({
     search: '',
     status: '',
@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
       const data = await issueService.getIssues(currentFilters);
       setIssues(data.issues);
       setTotal(data.total);
-      
+
       const statsData = data.stats || [];
       const newStats = { open: 0, inProgress: 0, resolved: 0 };
       statsData.forEach((s) => {
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
       }
     });
   };
-  
+
   const handleExport = async () => {
     try {
       setLoading(true);
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       message.success('Successfully exported issues');
     } catch (error) {
       message.error('Failed to export issues');
@@ -249,9 +249,9 @@ const Dashboard: React.FC = () => {
         <Col xs={24} lg={17}>
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={10}>
-              <Input 
-                placeholder="Search issues..." 
-                prefix={<SearchOutlined />} 
+              <Input
+                placeholder="Search issues..."
+                prefix={<SearchOutlined />}
                 onChange={handleSearchChange}
                 style={{ width: '100%', height: '40px' }}
                 allowClear
@@ -283,16 +283,16 @@ const Dashboard: React.FC = () => {
             </Col>
           </Row>
         </Col>
-        
+
         <Col xs={24} lg={7} style={{ textAlign: screens.lg ? 'right' : 'left' }}>
-          <Space 
-            size="middle" 
-            style={{ width: '100%', justifyContent: screens.lg ? 'flex-end' : 'flex-start' }} 
+          <Space
+            size="middle"
+            style={{ width: '100%', justifyContent: screens.lg ? 'flex-end' : 'flex-start' }}
             direction={screens.xs ? 'vertical' : 'horizontal'}
             wrap
           >
-            <Button 
-              icon={<DownloadOutlined />} 
+            <Button
+              icon={<DownloadOutlined />}
               onClick={handleExport}
               loading={loading}
               size="large"
@@ -301,9 +301,9 @@ const Dashboard: React.FC = () => {
             >
               Export CSV
             </Button>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => showDrawer('create')}
               size="large"
               style={{ borderRadius: '8px' }}
@@ -315,10 +315,10 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Table 
-        columns={columns} 
-        dataSource={issues} 
-        rowKey="id" 
+      <Table
+        columns={columns}
+        dataSource={issues}
+        rowKey="id"
         loading={loading}
         scroll={{ x: 800 }}
         pagination={{
@@ -350,11 +350,11 @@ const Dashboard: React.FC = () => {
           <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please enter issue title' }]}>
             <Input placeholder="Enter issue title" size="large" />
           </Form.Item>
-          
+
           <Form.Item name="description" label="Description">
             <TextArea rows={4} placeholder="Enter detailed description" />
           </Form.Item>
-          
+
           <div style={{ display: 'flex', gap: '16px' }}>
             {drawerType === 'edit' && (
               <Form.Item name="status" label="Status" style={{ flex: 1 }}>

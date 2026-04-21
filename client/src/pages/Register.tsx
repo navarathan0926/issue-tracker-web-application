@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
+import { useState, type FC } from 'react';
+import { Form, Button, Card, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../features/authSlice';
 import { authService } from '../services/authService';
+import FormInput from '../components/forms/FormInput';
+import FormPassword from '../components/forms/FormPassword';
+import { passwordPattern } from '../utils/patterns';
 
 const { Title, Text } = Typography;
 
-const Register: React.FC = () => {
+const Register: FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -45,28 +48,30 @@ const Register: React.FC = () => {
           layout="vertical"
           size="large"
         >
-          <Form.Item
+          <FormInput
             name="email"
+            placeholder="Email"
+            prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
             rules={[
               { required: true, message: 'Please input your Email!' },
               { type: 'email', message: 'Please enter a valid email!' }
             ]}
-          >
-            <Input prefix={<UserOutlined style={{ color: '#bfbfbf' }} />} placeholder="Email" />
-          </Form.Item>
+          />
 
-          <Form.Item
+          <FormPassword
             name="password"
+            placeholder="Password"
+            prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
             rules={[
               { required: true, message: 'Please input your Password!' },
-              { min: 6, message: 'Password must be at least 6 characters!' }
+              { pattern: passwordPattern.pattern, message: passwordPattern.message }
             ]}
-          >
-            <Input.Password prefix={<LockOutlined style={{ color: '#bfbfbf' }} />} placeholder="Password" />
-          </Form.Item>
+          />
 
-          <Form.Item
+          <FormPassword
             name="confirm"
+            placeholder="Confirm Password"
+            prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
             dependencies={['password']}
             hasFeedback
             rules={[
@@ -80,9 +85,7 @@ const Register: React.FC = () => {
                 },
               }),
             ]}
-          >
-             <Input.Password prefix={<LockOutlined style={{ color: '#bfbfbf' }} />} placeholder="Confirm Password" />
-          </Form.Item>
+          />
 
           <Form.Item>
             <Button type="primary" htmlType="submit" style={{ width: '100%', marginTop: 8 }} loading={loading}>
