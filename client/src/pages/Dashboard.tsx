@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, type FC } from 'react';
-import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card, Grid } from 'antd';
+import { Table, Tag, Space, Button, Input, Select, Drawer, Form, Modal, message, Row, Col, Statistic, Card, Grid, Pagination } from 'antd';
 import { PlusOutlined, SearchOutlined, CheckCircleOutlined, SyncOutlined, ClockCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import debounce from 'lodash/debounce';
 import { issueService } from '../services/issueService';
 import { type Issue, IssueStatus, IssuePriority, type IssueFilters } from '../types';
 import moment from 'moment';
+import { TableSection } from './Dashboard.styles';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -315,21 +316,31 @@ const Dashboard: FC = () => {
         </Col>
       </Row>
 
-      <Table
-        columns={columns}
-        dataSource={issues}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 800 }}
-        pagination={{
-          current: filters.page,
-          pageSize: filters.limit,
-          total: total,
-          showSizeChanger: true,
-          position: ['bottomCenter']
-        }}
-        onChange={handleTableChange}
-      />
+      <TableSection>
+        <div className="table-container">
+          <Table
+            columns={columns}
+            dataSource={issues}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 800 }}
+            pagination={false}
+            onChange={handleTableChange}
+          />
+        </div>
+        <div className="pagination-container">
+          <Pagination
+            current={filters.page}
+            pageSize={filters.limit}
+            total={total}
+            onChange={(page, pageSize) => {
+              setFilters(prev => ({ ...prev, page, limit: pageSize }));
+            }}
+            showSizeChanger
+            showTotal={(total) => `Total ${total} items`}
+          />
+        </div>
+      </TableSection>
 
       <Drawer
         title={drawerType === 'create' ? 'Create New Issue' : 'Edit Issue'}
