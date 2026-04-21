@@ -1,4 +1,4 @@
-import React, { type FC } from 'react';
+import { type FC } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
